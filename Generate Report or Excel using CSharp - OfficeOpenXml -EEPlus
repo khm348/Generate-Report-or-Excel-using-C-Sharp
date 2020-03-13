@@ -1,0 +1,35 @@
+using OfficeOpenXml;
+
+public void CreateReport(string Id)
+        {
+
+            string path = Server.MapPath("../export\\");
+
+            if (!Directory.Exists(path))   // CHECK IF THE FOLDER EXISTS. IF NOT, CREATE A NEW FOLDER.
+            {
+                Directory.CreateDirectory(path);
+            }
+            string filePath = path + "DataExport.xlsx";
+            ////System.IO.File.Delete(filePath); // DELETE THE FILE BEFORE CREATING A NEW ONE.
+            var query = from cp in db.Test
+
+                        select new User
+                        {
+                            first_name = cp.first_name,
+                            last_name = cp.last_name
+
+                        };
+            ExcelPackage excel = new ExcelPackage();
+            var workSheet = excel.Workbook.Worksheets.Add("Sheet1");
+            workSheet.Cells[1, 1].LoadFromCollection(query.ToList(), true);           
+            using (var memoryStream = new MemoryStream())
+            {
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("content-disposition", "attachment;  filename=UserHistory.xlsx");
+                excel.SaveAs(memoryStream);
+                memoryStream.WriteTo(Response.OutputStream);
+                Response.Flush();
+                Response.End();
+            }
+          
+        }
